@@ -198,18 +198,16 @@ if(do_elj)
 load('~/Dropbox/CoosBay/model/forcing_files/txpo_tide_1min.mat')
 time=time-datenum(0,0,0,8,0,0); MJD=MJD-datenum(0,0,0,8,0,0);
 Mobj.surfaceElevation=[];
-%for i=1:52;  Mobj.surfaceElevation(i,:)=hts(i).ts; end  
 % number of obc nodes = nmark == 41
 nn = length(find(Mobj.nmark==41));
 % add subtidal elevation from charleston to txpo
 wl=load('~/Dropbox/CoosBay/model/forcing_files/charleston_tide.mat','height');wl=wl.height;
 wltime=load('~/Dropbox/CoosBay/model/forcing_files/charleston_tide.mat','time');wltime=wltime.time;
 wlfilt=godinfilt(wl(:)); wlfilt_txpo=interp1(wltime,wlfilt,time);
-ht35=hts(35).ts;  clear hts
-for i=1:length(wlfilt_txpo)
-txpo_sub(i)=ht35(i) + (wlfilt_txpo(i)); % using mid-boundary txpo (think it was causing problems using values for each point)
-end 
-Mobj.surfaceElevation = repmat(txpo_sub',1,nn)'; 
+for i=1:52;  
+    Mobj.surfaceElevation(i,:)=hts(i).ts + wlfilt_txpo;
+end  
+
 write_FVCOM_elevtide(Mobj, MJD, elvfile, modelid)
 
 disp(['*** creating ',elvfile,' ***']);
