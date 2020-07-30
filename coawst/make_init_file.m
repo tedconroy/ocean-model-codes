@@ -1,9 +1,16 @@
 function make_init_file(grid_file,data_file,init_file_name,start_time,grid_mat_file)
-% 
+% interpolates existing_output_file onto grid_file using roms tools
 %
-% interpolates existing_output_file onto grid_file
+% input
+% grid_file: full path to grid nc file
+% data_file: full path to file to initialize from
+% init_file_name: initial file name to be created
+% grid_mat_file: sourced from gridbuilder
+%
+%
 %
 % todo: 
+%  - remove hard coded stuff
 %  - add sediment (e.g. from create_roms_init), use this to create file create_roms_netcdf_init_mw
 %  - add option to use same grid (no interpolation needed)
 %
@@ -19,7 +26,13 @@ if SG.grid.coord == 'spherical'; S.spherical = 1; else; S.spherical = 0; end
 S.Vtransform=SG.Z.ROMS.Vtransform; %vertical transformation equation
 S.N = SG.Z.ROMS.N; %number of vertical levels
 S.NT = 2; % number tracers
-S.Lm =258; S.Mm=518; 
+[Lr,Mr] = size(nc_read(grid_file,'h'));
+Lu = Lr-1;
+Lv = Lr;
+Mu = Mr;
+Mv = Mr-1;
+S.Lm          = Lr-2;       % number of interior RHO-points, X-direction
+S.Mm          = Mr-2;       % number of interior RHO-points, Y-direction
 S.Vstretching =4;  %vertical stretching function
 S.theta_s     =8;      %surface control parameter
 S.theta_b     =4;      %bottom  control parameter
@@ -164,22 +177,30 @@ igrid = 1;
 % find nearest time index
 t = datenum(0,0,0,0,0,ncread(data_file,'ocean_time'))+datenum(2010,1,1); % moana project date format
 ind  = dsearchn(t,start_time); % find nearest time match
-disp(['selecting nearest time to start_time (' datestr(start_time) ') = ' datestr(t(ind))])
+disp(['selecting nearest time to start_time (' datestr(start_time) ') as ' datestr(t(ind))])
 
 % convert time to moana project time format
 init_time  = etime(datevec(start_time),datevec(datenum(2010,1,1)));
 
 d = get_roms_grid(data_file); % donor grid info
 
-% list of variable names to interpolate from data_file (some are Moana Project specific)
-field_names = {'zeta' 'ubar_eastward' 'vbar_northward' 'u_eastward' 'v_northward' ...
+% list of variable names to interpolate from data_file (some were Moana Project specific)
+field_names = {'zeta' 'ubar' 'vbar' 'u' 'v' ...
     'salt' 'temp'};
 % change variable names in init_file back to ROMS standard (same order)
 field_names_update = {'zeta' 'ubar' 'vbar' 'u' 'v' 'salt' 'temp'};
 
 % loop through variables, interpolate, write out
 for n=1:length(field_names)
-v = roms2roms (data_file,d,Gout,field_names{n},ind,1,'natural',5,'true');
+intrp2rho = 0; % logical: interp u/v to rho points
+
+% need to rotate vectors? %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Gout.parent_angle =
+% roms2roms(data_file,d,Gout,'angle',[],intrp2rho,'linear',5,'true');
+% might have to copy code from obc_roms2roms to roms2roms
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+v = roms2roms (data_file,d,Gout,field_names{n},ind,intrp2rho,'natural',5,'true');
 ncwrite(init_file_name,field_names_update{n},v); % write out var
 disp(['writing var to init file: ' field_names_update{n}])
 end
@@ -190,8 +211,8 @@ ncwrite(init_file_name,'theta_b',Gout.theta_b);
 ncwrite(init_file_name,'Tcline',Gout.Tcline);
 ncwrite(init_file_name,'Cs_r',Gout.Cs_r);
 ncwrite(init_file_name,'Cs_w',Gout.Cs_w);
-ncwrite(init_file_name,'sc_w',Gout.s_w);
-ncwrite(init_file_name,'sc_r',Gout.s_rho);
+ncwrite(init_file_name,'s_w',Gout.s_w);
+ncwrite(init_file_name,'s_rho',Gout.s_rho);
 ncwrite(init_file_name,'hc',Gout.hc);
 ncwrite(init_file_name,'Vtransform',Gout.Vtransform);
 ncwrite(init_file_name,'Vstretching',Gout.Vstretching);

@@ -1,42 +1,52 @@
-%% creating a COAWST set up for hawke bay 
+%% creating a COAWST set up 
+% for hawke bay , new zealand
 % ted conroy 2020
 
-%% specify what to do (logicals)
+%% FILE CREATION (logicals)
+
 make_tide_file = 0; % make a tidal forcing file from txpo atlas 9.2
-make_init = 1;
-make_bc_files = 0;
-make_rivers = 0;
+make_init = 1; % make an initial conditions netcdf file
+make_bc_file = 1; % make open boundary forcing file
+make_rivers = 0; % create rirver forcing files
+make_forcing = 0; % make forcing file (e.g. atmospheric)
+
 % nesting
 % sediment
 % waves
 % clm file
 
-%% specify time interval
+%% TIME specifics
 
 % For ROMS .in file use TIME_REF=-2; means in MJD
+% more info about time in roms
+
 start_time = datenum(2017,2,1); % start time of run
 mjd_init = datenum(1968,5,23);
 tval_for_infile = start_time - mjd_init; % enter this value in the .in file
 disp(['enter ' num2str(tval_for_infile) ' for TIDE_START value'])
 days_to_simulate=365;  % length of model run in days
 
-%% file directories
-grid_dir = 'C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst\input_files\grid\';
-grid_file_name = 'roms_grid_002_500m.nc';
-grid_mat_file = 'C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst\input_files\grid\roms_grid_002_500m.mat'; % output from Gridbuilder
-grid_file  = [grid_dir '\' grid_file_name]; % full path
-data_file ='http://thredds.moanaproject.org:8080/thredds/dodsC/moana/ocean/NZB/v1.9/raw_3D/nz5km_his_201702.nc'; % file to initialize from
-bc_file_path ='http://thredds.moanaproject.org:8080/thredds/dodsC/moana/ocean/NZB/v1.9/raw_3D/'; % path to directory of boundary forcing files
+%% FILE DIRECTORIES
 
-%% output file names
-tide_ncfile=['C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst\input_files\tide\' datestr(start_time,'ddmmmyyyy') '.nc'];
-init_file_name = 'initial_file.nc';
+grid_dir = '/home/tc196/setup/files/';
+grid_file_name = 'roms_grid_001_1km.nc';
+grid_mat_file = '/home/tc196/setup/files/roms_grid_001_1km.mat'; % output from Gridbuilder
+grid_file  = [grid_dir '/' grid_file_name]; % full path of grid file
+data_file ='/nesi/nobackup/mocean02574/NZB_N50/nz5km_his_201701.nc'; % file to initialize from (automate this based on input date)
+bc_file_path ='/nesi/nobackup/mocean02574/NZB_N50/'; % path to directory of boundary forcing files
 
-%% add (recursive) paths to m-files 
-addpath(genpath('C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst\'));
-addpath(genpath('/Users/ted/Dropbox/research/hawkes_bay/model/coawst/'))
-addpath(genpath('C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst\input_files\tide'))
+%% OUTPUT FILE NAMES
 
+tide_ncfile=['C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst\input_files\tide\' datestr(start_time,'ddmmmyyyy') '.nc']; % tide forcing file
+init_file_name = 'ocean_ini.nc'; % initial conditions file
+bc_file_name = 'ocean_bry.nc'; % open boundary file
+
+%% add (recursive) paths to m-files needed
+
+addpath(genpath('scale_wlg_persistent/filesets/home/tc196/'))
+cd nctoolbox-1.1.3
+setup_nctoolbox
+cd ../
 %-------------------------------------------------------------------------------------------------
 %% end user defs ---------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------------------------
@@ -56,38 +66,46 @@ disp(['created tidal forcing file:' tide_ncfile])
 end
 
 %% create initial condition file from existing .his file
-% In cppdefs.h you should have 
-% #undef ana_initial
-% interpolates nans
+% In cppdefs.h you should have #undef ana_initial
+% interpolates onto grid, removes NaNs, ...
 
 if make_init
-make_init_file(grid_file,data_file,init_file_name,start_time,grid_mat_file)
-disp(['created initial conditions file:' init_file_name ])
+make_init_file (grid_file,data_file,init_file_name,start_time,grid_mat_file)
+disp (['created initial conditions file:' init_file_name ])
 end
 
 %% boundary forcing
+% first find the files to use (can add this to function below)
+% allfiles = dir([bc_file_path '\*his']); % currently using history files
+% will be like ^ that on nesi, not here though
 
-% if make_bc_files
-% interp_boundary extract_bry, 
-% 
-% 
-% B = obc_roms2roms(ncfile,D,R,VarList,Tindex,boundary, ...
-%                     Hmethod,offset,RemoveNaN);
-% 
-% B = obc_roms2roms(ncfile,D,R,VarList,Tindex,boundary,varargin)
-% 
-% make_bry_files
+if make_bc_file
+  % boundary forcing file(s)
+  % takes awhile, worth looking into speed up..
+    input_f = data_file; % temporary
+    make_bry_files(bc_file_name,grid_file,input_f,grid_mat_file)
+    
+   % nudging time scale file
+end
 
 %% rivers
-%create_roms_river
+
+if make_rivers
+make_riv_files
+end
 
 %% nesting files
 
 %% atmospheric forcing
 % Hau-moana will be done ~september
 % constant forcing for now, or reanalysis 
+if make_forcing
+    create_roms_forcings
+end
 
 %% waves
+
+% roms2swan
 
 %% sediment
 %% other files
