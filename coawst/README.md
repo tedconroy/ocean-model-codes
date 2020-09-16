@@ -18,7 +18,7 @@ To make SCRIP, I set FORT = gfortran in the makefile, and had to change the lib 
 export   MCT_INCDIR=/home/tc196/COAWST/Lib/MCT/include 
 export   MCT_LIBDIR=/home/tc196/COAWST/Lib/MCT/lib 
 ```
-to find my Netcdf env, i used commands nc-confid -all and which nc-config, nc-config --flibs, to find
+to find my Netcdf env, i used commands nc-config -all, which nc-config, nc-config --flibs, to find
 ```
 export  NETCDF_INCDIR=/opt/nesi/CS400_centos7_bdw/netCDF-Fortran/4.5.2-gimpi-2020a/include 
 export  NETCDF_LIBDIR=/opt/nesi/CS400_centos7_bdw/netCDF-Fortran/4.5.2-gimpi-2020a/lib 
