@@ -13,5 +13,20 @@ in my bash.rc file I put the module info needed for COAWST
 ```
 module load netCDF-Fortran/4.5.2-gimpi-2020a
 ```
-
+To make SCRIP, I set FORT = gfortran in the makefile, and had to change the lib and include directories to somewhere that I had permission to write. I then set the env vars (on a PC) to 
+```
+export   MCT_INCDIR=/home/tc196/COAWST/Lib/MCT/include 
+export   MCT_LIBDIR=/home/tc196/COAWST/Lib/MCT/lib 
+```
+to find my Netcdf env, i used commands nc-confid -all and which nc-config, nc-config --flibs, to find
+```
+export  NETCDF_INCDIR=/opt/nesi/CS400_centos7_bdw/netCDF-Fortran/4.5.2-gimpi-2020a/include 
+export  NETCDF_LIBDIR=/opt/nesi/CS400_centos7_bdw/netCDF-Fortran/4.5.2-gimpi-2020a/lib 
+export  NETCDF=/opt/nesi/CS400_centos7_bdw/netCDF-Fortran/4.5.2-gimpi-2020a 
+export  NETCDF_CONFIG=/opt/nesi/CS400_centos7_bdw/netCDF-Fortran/4.5.2-gimpi-2020a/bin /nc-config 
+ ```
+ now update the coawst.bash file accordingly, and compile COAWST
+ ```
+ ./coawst.bash
+ ```
 
