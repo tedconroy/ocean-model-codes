@@ -15,7 +15,7 @@ addpath(genpath( 'C:\Users\tc196\Dropbox\research\hawkes_bay\model\coawst'))
 
 %% specify information about grids
 
-% mostest coarsest grid file
+%  coarsest grid file
 c_g = 'sept_2020_v2.nc';
 
 lon_rho = ncread(c_g,'lon_rho');
