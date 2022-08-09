@@ -34,7 +34,7 @@ for n=1:length(lxsect)
     for i=1:length(fnames) % get fluxes at each output
         fname=([fdir, fnames(i).name]);
         tcur=datenum(nc_varget([fdir, fnames(i).name],'time'))+datenum('1858-11-17 00:00:00');  if n==1; if i==1; time=tcur; end; time=[time;tcur]; end
-        [cross_section.fluxes(i).f]=calcfluxsect_tc(fname,[lxsect(n).x0 lxsect(n).y0 lxsect(n).x1 lxsect(n).y1],[tcur tcur],'v s x f',1);
+        [cross_section.fluxes(i).f]=fvcom_calcfluxsect(fname,[lxsect(n).x0 lxsect(n).y0 lxsect(n).x1 lxsect(n).y1],[tcur tcur],'v s x f',1);
     end
     cross_section.vol=0; % make timeseries
     
